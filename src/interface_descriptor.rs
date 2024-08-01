@@ -51,6 +51,16 @@ pub struct InterfaceDescriptor<'a> {
 }
 
 impl<'a> InterfaceDescriptor<'a> {
+    /// Returns the size of the descriptor in bytes
+    pub fn length(&self) -> u8 {
+        self.descriptor.bLength
+    }
+
+    /// Returns the descriptor type
+    pub fn descriptor_type(&self) -> u8 {
+        self.descriptor.bDescriptorType
+    }
+
     /// Returns the interface's number.
     pub fn interface_number(&self) -> u8 {
         self.descriptor.bInterfaceNumber
@@ -91,11 +101,9 @@ impl<'a> InterfaceDescriptor<'a> {
 
     /// Returns an iterator over the interface's endpoint descriptors.
     pub fn endpoint_descriptors(&self) -> EndpointDescriptors<'a> {
-        let endpoints = unsafe {
-            slice::from_raw_parts(
-                self.descriptor.endpoint,
-                self.descriptor.bNumEndpoints as usize,
-            )
+        let endpoints = match self.descriptor.bNumEndpoints {
+            0 => &[],
+            n => unsafe { slice::from_raw_parts(self.descriptor.endpoint, n as usize) },
         };
 
         EndpointDescriptors {
